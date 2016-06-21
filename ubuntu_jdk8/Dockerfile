@@ -7,7 +7,7 @@
 # Codenvy, S.A. - initial API and implementation
 
 FROM ubuntu
-EXPOSE 4403 8000 8080 9876 22
+EXPOSE 4403 8000 8080 8443 9876 22
 RUN apt-get update && \
     apt-get -y install sudo openssh-server procps wget unzip mc curl subversion software-properties-common python-software-properties && \
     mkdir /var/run/sshd && \
@@ -24,35 +24,32 @@ RUN apt-get update && \
 
 USER user
 
-LABEL che:server:8080:ref=tomcat8 che:server:8080:protocol=http che:server:8000:ref=tomcat8-debug che:server:8000:protocol=http che:server:9876:ref=codeserver che:server:9876:protocol=http
+LABEL che:server:8080:ref=tomcat7 che:server:8443:ref=tomcat7 che:server:8443:protocol=https che:server:8080:protocol=http che:server:8000:ref=tomcat7-debug che:server:8000:protocol=http che:server:9876:ref=codeserver che:server:9876:protocol=http
 
 
-ENV MAVEN_VERSION=3.3.9 \
-    JAVA_VERSION=8u45 \
+ENV JAVA_VERSION=8u45 \
     JAVA_VERSION_PREFIX=1.8.0_45 \
     TOMCAT_HOME=/home/user/tomcat8
 
-ENV JAVA_HOME=/opt/jdk$JAVA_VERSION_PREFIX \
-M2_HOME=/home/user/apache-maven-$MAVEN_VERSION
+ENV JAVA_HOME=/opt/jdk$JAVA_VERSION_PREFIX 
 
-ENV PATH=$JAVA_HOME/bin:$M2_HOME/bin:$PATH
+ENV PATH=$JAVA_HOME/bin:$PATH
 
-RUN mkdir /home/user/cbuild /home/user/tomcat8 /home/user/apache-maven-$MAVEN_VERSION && \
+RUN mkdir /home/user/cbuild /home/user/tomcat7 && \
   wget \
   --no-cookies \
   --no-check-certificate \
   --header "Cookie: oraclelicense=accept-securebackup-cookie" \
   -qO- \
-  "http://download.oracle.com/otn-pub/java/jdk/$JAVA_VERSION-b14/jdk-$JAVA_VERSION-linux-x64.tar.gz" | sudo tar -zx -C /opt/ && \
-  wget -qO- "http://apache.ip-connect.vn.ua/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz" | tar -zx --strip-components=1 -C /home/user/apache-maven-$MAVEN_VERSION/
+  "http://download.oracle.com/otn-pub/java/jdk/$JAVA_VERSION-b14/jdk-$JAVA_VERSION-linux-x64.tar.gz" | sudo tar -zx -C /opt/ 
 ENV TERM xterm
 
-RUN wget -qO- "http://archive.apache.org/dist/tomcat/tomcat-8/v8.0.24/bin/apache-tomcat-8.0.24.tar.gz" | tar -zx --strip-components=1 -C /home/user/tomcat8 && \
-    rm -rf /home/user/tomcat8/webapps/*
+RUN wget -qO- "http://archive.apache.org/dist/tomcat/tomcat-7/v7.0.10/bin/apache-tomcat-7.0.10.tar.gz" | tar -zx --strip-components=1 -C /home/user/tomcat7 && \
+    rm -rf /home/user/tomcat7/webapps/*
 
 
 ENV LANG C.UTF-8
-RUN echo "export JAVA_HOME=/opt/jdk$JAVA_VERSION_PREFIX\nexport M2_HOME=/home/user/apache-maven-$MAVEN_VERSION\nexport TOMCAT_HOME=/home/user/tomcat8\nexport PATH=$JAVA_HOME/bin:$M2_HOME/bin:$PATH" >> /home/user/.bashrc
+RUN echo "export JAVA_HOME=/opt/jdk$JAVA_VERSION_PREFIX\nexport TOMCAT_HOME=/home/user/tomcat7\nexport PATH=$JAVA_HOME/bin:$PATH" >> /home/user/.bashrc
 
 WORKDIR /projects
 
